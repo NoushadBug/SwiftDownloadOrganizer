@@ -44,6 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelConfirmDelete = document.getElementById('cancelConfirmDelete');
   const saveConfirmDelete = document.getElementById('saveConfirmDelete');
 
+  // Close Confirm Delete Modal handler
+  cancelConfirmDelete.addEventListener('click', () => {
+    document.getElementById('modalConfirmDelete').classList.add('hidden');
+  });
+  // Close Rename Extension Modal handler
+  cancelRenameExtension.addEventListener('click', () => {
+    document.getElementById('modalRenameExtension').classList.add('hidden');
+  });
+  cancelRenameGroup.addEventListener('click', () => {
+    document.getElementById('modalRenameGroup').classList.add('hidden');
+  });
+  cancelAddExtension.addEventListener('click', () => {
+    document.getElementById('modalAddExtension').classList.add('hidden');
+  });
+
+
   // Populate dropdown for both add and edit modals
   function populateExtensionDropdownFor(selectElement) {
     if (!selectElement) return;
