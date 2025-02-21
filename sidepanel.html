@@ -1,20 +1,18 @@
 <!-- sidepanel.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Swift Download Organizer</title>
   <!-- Boxicons for icons -->
   <link href="./styles/stylesheet.css" rel="stylesheet" />
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" /> <!-- DataTables CSS -->
-  <!-- <link rel="stylesheet" href="./styles/jquery.dataTables.min.css"> -->
-  <!-- jQuery & DataTables JS -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <!-- jQuery (if needed) -->
   <script src="./scripts/jquery.min.js"></script>
-  <!-- <script src="./scripts/jquery.dataTables.min.js"></script> -->
-  <!-- Tailwind (local copy) -->
+  <!-- Tailwind (local copy or CDN) -->
   <script src="./scripts/tailwind.min.js"></script>
+  <!-- SortableJS (for reordering rules) -->
   <script src="./scripts/Sortable.min.js"></script>
   <style>
     body {
@@ -22,7 +20,6 @@
     }
   </style>
 </head>
-
 <body class="p-3 bg-green-100">
   <!-- Header with Close Sidebar Button -->
   <div class="flex justify-between items-center mt-5 mb-2 mx-0 p-2 bg-orange-200 rounded-full">
@@ -32,73 +29,65 @@
       <i class="bx bx-x"></i>
     </button>
   </div>
+
   <div class="max-w-6xl mx-auto">
-    <!-- Existing Rules Section (DataTable) -->
+    <!-- Existing Rules Section -->
     <section class="mb-3">
-      <div
-        class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-md p-2 transition-transform transform hover:shadow-lg">
-        <div class="flex justify-between ">
+      <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-md p-2 hover:shadow-lg">
+        <div class="flex justify-between">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">Existing Rules</h2>
           <input id="tableSearch" type="text" placeholder="Search rules..." class="mb-1 border-2 p-2 border rounded">
         </div>
-
         <table id="rulesTable" class="min-w-full border-collapse border border-2">
           <thead>
             <tr class="bg-gray-100">
               <th class="border border-gray-200 px-4 py-2 text-gray-800">File Extension</th>
-              <th class="border border-gray-200 px-4 py-2 text-gray-800" style="-webkit-box-orient: vertical;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              width: 100px;">Source URL Contains</th>
+              <th class="border border-gray-200 px-4 py-2 text-gray-800">Source URL Contains</th>
               <th class="border border-gray-200 px-4 py-2 text-gray-800">Folder</th>
               <th class="border border-gray-200 px-4 py-2 text-gray-800">Actions</th>
             </tr>
           </thead>
           <tbody id="rulesTableBody">
-            <!-- Rule rows will be injected here -->
+            <!-- Rule rows injected by sidepanel.js -->
           </tbody>
         </table>
       </div>
     </section>
+
+    <!-- Manage Groups Button -->
     <section>
-      <div
-        class="bg-white border border-gray-200 rounded-lg shadow-md p-6 transition-transform transform hover:shadow-lg mb-3">
-        <div class="mt-2 flex space-x-2">
-          <button id="addGroupBtn" type="button" class="bg-blue-500 text-white px-2 py-1 rounded">Add Group</button>
-          <button id="addExtensionBtn" type="button" class="bg-blue-500 text-white px-2 py-1 rounded">Add
-            Extension</button>
-        </div>
+      <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg mb-3">
+        <button id="manageGroupsBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded">
+          Manage Groups
+        </button>
       </div>
     </section>
 
     <!-- Add New Rule Section -->
     <section>
-      <div
-        class="bg-white border border-gray-200 rounded-lg shadow-md p-6 transition-transform transform hover:shadow-lg">
+      <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Add New Rule</h2>
         <form id="ruleForm" class="space-y-4">
-          <!-- Instead of a text input for file extension, we use a dropdown -->
           <div>
             <label for="extensionSelect" class="block text-sm font-medium text-gray-700">
               Extension or Group (optional)
             </label>
-            <select id="extensionSelect"
-              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-              <!-- Options will be populated by sidepanel.js -->
+            <select id="extensionSelect" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
+              <!-- Options populated by sidepanel.js -->
             </select>
           </div>
           <div>
-            <label for="sourceUrlContains" class="block text-sm font-medium text-gray-700">Source URL Contains
-              (optional)</label>
+            <label for="sourceUrlContains" class="block text-sm font-medium text-gray-700">
+              Source URL Contains (optional)
+            </label>
             <input type="text" id="sourceUrlContains" placeholder="Will be auto-filled from active tab"
-              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-300" />
+              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
           </div>
           <div>
             <label for="folder" class="block text-sm font-medium text-gray-700">Folder (required)</label>
             <input type="text" id="folder" placeholder="e.g. Downloads/PDFs" required
-              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-300" />
+              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
           </div>
-
           <button type="submit"
             class="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition duration-300">
             <i class="bx bx-plus mr-2"></i> Add Rule
@@ -106,55 +95,116 @@
         </form>
       </div>
     </section>
-
-    <!-- Add Group Modal -->
-    <div id="addGroupModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-      <div class="bg-white rounded-lg p-6 w-80">
-        <h2 class="text-xl font-bold mb-4">Add New Group</h2>
-        <input id="newGroupName" type="text" placeholder="Group name"
-          class="w-full border border-gray-300 rounded p-2 mb-4">
-        <div class="flex justify-end space-x-2">
-          <button id="cancelGroupBtn"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">Cancel</button>
-          <button id="saveGroupBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Extension Modal -->
-    <div id="addExtensionModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-      <div class="bg-white rounded-lg p-6 w-80">
-        <h2 class="text-xl font-bold mb-4">Add New Extension</h2>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Select Group</label>
-        <select id="extensionGroupSelect" class="w-full border border-gray-300 rounded p-2 mb-4">
-          <!-- Options populated from defaultExtensionGroups -->
-        </select>
-        <input id="newExtensionValue" type="text" placeholder="Extension (without dot)"
-          class="w-full border border-gray-300 rounded p-2 mb-4">
-        <div class="flex justify-end space-x-2">
-          <button id="cancelExtensionBtn"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">Cancel</button>
-          <button id="saveExtensionBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">Save</button>
-        </div>
-      </div>
-    </div>
-
-
   </div>
-  <script src="sidepanel.js"></script>
-  <script>
-    // Initialize DataTable when document is ready
-    $(document).ready(function () {
-      $('#rulesTable').DataTable({
-        paging: true,
-        searching: true,
-        info: false,
-        columnDefs: [
-          { orderable: false, targets: 3 } // Actions column not orderable
-        ]
-      });
-    });
-  </script>
-</body>
 
+  <!-- Manage Groups Modal (Single Modal for All Group/Extension Management) -->
+  <div id="manageGroupsModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-96 max-h-full overflow-y-auto">
+      <h2 class="text-xl font-bold mb-4">Manage Groups & Extensions</h2>
+
+      <!-- "Add Group" button at the top of the modal -->
+      <div class="mb-4">
+        <button id="openAddGroupModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
+          + Add Group
+        </button>
+      </div>
+
+      <!-- Container that will be populated by sidepanel.js with groups & extensions -->
+      <div id="groupsContainer"></div>
+
+      <!-- Close button -->
+      <div class="flex justify-end mt-4">
+        <button id="closeManageGroupsBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Group Sub-Modal (inside Manage Groups) -->
+  <div id="modalAddGroup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-80">
+      <h2 class="text-xl font-bold mb-4">Add New Group</h2>
+      <input id="modalAddGroupName" type="text" placeholder="Group name"
+        class="w-full border border-gray-300 rounded p-2 mb-4">
+      <div class="flex justify-end space-x-2">
+        <button id="cancelAddGroup" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
+          Cancel
+        </button>
+        <button id="saveAddGroup" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Extension Sub-Modal (inside Manage Groups) -->
+  <div id="modalAddExtension" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-80">
+      <h2 class="text-xl font-bold mb-4">Add Extension to <span id="modalAddExtensionGroupName"></span></h2>
+      <input id="modalAddExtensionValue" type="text" placeholder="Extension (without dot)"
+        class="w-full border border-gray-300 rounded p-2 mb-4">
+      <div class="flex justify-end space-x-2">
+        <button id="cancelAddExtension" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
+          Cancel
+        </button>
+        <button id="saveAddExtension" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Group Sub-Modal -->
+  <div id="modalRenameGroup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-80">
+      <h2 class="text-xl font-bold mb-4">Rename Group</h2>
+      <input id="modalRenameGroupInput" type="text"
+        class="w-full border border-gray-300 rounded p-2 mb-4">
+      <div class="flex justify-end space-x-2">
+        <button id="cancelRenameGroup" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
+          Cancel
+        </button>
+        <button id="saveRenameGroup" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Extension Sub-Modal -->
+  <div id="modalRenameExtension" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-80">
+      <h2 class="text-xl font-bold mb-4">Rename Extension</h2>
+      <input id="modalRenameExtensionInput" type="text"
+        class="w-full border border-gray-300 rounded p-2 mb-4">
+      <div class="flex justify-end space-x-2">
+        <button id="cancelRenameExtension" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
+          Cancel
+        </button>
+        <button id="saveRenameExtension" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Sub-Modal (used for group or extension) -->
+  <div id="modalConfirmDelete" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-80">
+      <h2 class="text-xl font-bold mb-4" id="modalConfirmDeleteTitle">Delete?</h2>
+      <p id="modalConfirmDeleteMessage" class="mb-4 text-gray-700"></p>
+      <div class="flex justify-end space-x-2">
+        <button id="cancelConfirmDelete" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
+          Cancel
+        </button>
+        <button id="saveConfirmDelete" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
 </html>

@@ -1,47 +1,90 @@
-// sidepanel.js
 document.addEventListener('DOMContentLoaded', () => {
+  // DOM elements for rules and sidebar
   const rulesTableBody = document.getElementById('rulesTableBody');
   const ruleForm = document.getElementById('ruleForm');
   const closeSidebarButton = document.getElementById('closeSidebar');
-  const searchInput = document.getElementById('tableSearch'); // Ensure this exists in your HTML
+  const searchInput = document.getElementById('tableSearch');
   const extensionSelect = document.getElementById('extensionSelect');
-  const addGroupBtn = document.getElementById('addGroupBtn');
-  const addExtensionBtn = document.getElementById('addExtensionBtn');
+  const manageGroupsBtn = document.getElementById('manageGroupsBtn');
 
-  // Default extension groups
+  // Manage Groups Modal & its container
+  const manageGroupsModal = document.getElementById('manageGroupsModal');
+  const groupsContainer = document.getElementById('groupsContainer');
+
+  // "Add Group" Sub-Modal elements
+  const openAddGroupModalBtn = document.getElementById('openAddGroupModalBtn');
+  const modalAddGroup = document.getElementById('modalAddGroup');
+  const modalAddGroupName = document.getElementById('modalAddGroupName');
+  const cancelAddGroup = document.getElementById('cancelAddGroup');
+  const saveAddGroup = document.getElementById('saveAddGroup');
+
+  // "Add Extension" Sub-Modal (for a specific group)
+  const modalAddExtension = document.getElementById('modalAddExtension');
+  const modalAddExtensionGroupName = document.getElementById('modalAddExtensionGroupName');
+  const modalAddExtensionValue = document.getElementById('modalAddExtensionValue');
+  const cancelAddExtension = document.getElementById('cancelAddExtension');
+  const saveAddExtension = document.getElementById('saveAddExtension');
+
+  // "Rename Group" Sub-Modal elements
+  const modalRenameGroup = document.getElementById('modalRenameGroup');
+  const modalRenameGroupInput = document.getElementById('modalRenameGroupInput');
+  const cancelRenameGroup = document.getElementById('cancelRenameGroup');
+  const saveRenameGroup = document.getElementById('saveRenameGroup');
+
+  // "Rename Extension" Sub-Modal elements
+  const modalRenameExtension = document.getElementById('modalRenameExtension');
+  const modalRenameExtensionInput = document.getElementById('modalRenameExtensionInput');
+  const cancelRenameExtension = document.getElementById('cancelRenameExtension');
+  const saveRenameExtension = document.getElementById('saveRenameExtension');
+
+  // "Confirm Delete" Sub-Modal elements
+  const modalConfirmDelete = document.getElementById('modalConfirmDelete');
+  const modalConfirmDeleteTitle = document.getElementById('modalConfirmDeleteTitle');
+  const modalConfirmDeleteMessage = document.getElementById('modalConfirmDeleteMessage');
+  const cancelConfirmDelete = document.getElementById('cancelConfirmDelete');
+  const saveConfirmDelete = document.getElementById('saveConfirmDelete');
+
+  // Expanded default extension groups
   const defaultExtensionGroups = {
     "Compressed": ["zip", "7z", "tar", "rar", "gz"],
     "Videos": ["mp4", "mkv", "avi", "mov"],
-    // ... add other groups as needed
+    "Images": ["jpg", "jpeg", "png", "gif", "bmp", "webp"],
+    "Documents": ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"]
   };
-
-  // This variable will hold the extension groups loaded from storage.
   let extensionGroups = {};
 
-  // Load extension groups from storage (or use defaults if not present)
+  // Utility: show/hide modals
+  function showModal(el) {
+    el.classList.remove('hidden');
+  }
+  function hideModal(el) {
+    el.classList.add('hidden');
+  }
+
+  // Load extension groups from storage (or use defaults)
   function loadExtensionGroups(callback) {
     chrome.storage.sync.get({ extensionGroups: defaultExtensionGroups }, (data) => {
       extensionGroups = data.extensionGroups;
-      callback && callback();
+      console.log("Loaded extension groups:", extensionGroups);
+      if (callback) callback();
     });
   }
-
-  // Save the current extensionGroups object to storage
+  // Save extension groups to storage
   function saveExtensionGroups(callback) {
-    chrome.storage.sync.set({ extensionGroups: extensionGroups }, callback);
+    chrome.storage.sync.set({ extensionGroups }, callback);
   }
 
-  // Populate the extension dropdown (for adding rules)
+  // Populate the "Add New Rule" dropdown from extension groups
   function populateExtensionDropdown() {
     if (!extensionSelect) return;
+    console.log("Populating dropdown with:", extensionGroups);
     extensionSelect.innerHTML = '<option value="">-- Select extension or group --</option>';
     for (const group in extensionGroups) {
-      // Option to address the whole group
+      // Option to select the whole group
       const groupOption = document.createElement('option');
       groupOption.value = "group:" + group;
       groupOption.textContent = group + " (All)";
       extensionSelect.appendChild(groupOption);
-
       // Create an optgroup for individual extensions
       const optgroup = document.createElement('optgroup');
       optgroup.label = group;
@@ -55,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Populate the group dropdown in the "Add Extension" modal
+  // Populate the group select for the "Add Extension" sub-modal
   function populateExtensionGroupSelect() {
     const extensionGroupSelect = document.getElementById('extensionGroupSelect');
     if (!extensionGroupSelect) return;
@@ -68,95 +111,199 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Call this once at startup to load extension groups and populate dropdowns
-  loadExtensionGroups(() => {
-    populateExtensionDropdown();
-    populateExtensionGroupSelect();
+  // Build the Manage Groups UI inside the Manage Groups modal
+  function buildManageGroupsUI() {
+    groupsContainer.innerHTML = '';
+    Object.keys(extensionGroups).forEach((groupName) => {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'border p-2 rounded mb-2';
+
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'flex justify-between items-center';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = groupName;
+      nameSpan.className = 'font-bold';
+      headerDiv.appendChild(nameSpan);
+
+      const actionsDiv = document.createElement('div');
+
+      // Rename Group button
+      const renameBtn = document.createElement('button');
+      renameBtn.className = 'text-blue-600 hover:text-blue-800 mr-2';
+      renameBtn.innerHTML = `<i class="bx bx-edit-alt"></i>`;
+      renameBtn.title = 'Rename Group';
+      renameBtn.addEventListener('click', () => {
+        modalRenameGroupInput.value = groupName;
+        showModal(modalRenameGroup);
+        saveRenameGroup.onclick = () => {
+          const newName = modalRenameGroupInput.value.trim();
+          if (newName && newName !== groupName) {
+            extensionGroups[newName] = extensionGroups[groupName];
+            delete extensionGroups[groupName];
+            saveExtensionGroups(() => {
+              hideModal(modalRenameGroup);
+              buildManageGroupsUI();
+              populateExtensionDropdown();
+              populateExtensionGroupSelect();
+            });
+          } else {
+            hideModal(modalRenameGroup);
+          }
+        };
+      });
+      actionsDiv.appendChild(renameBtn);
+
+      // Delete Group button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'text-red-600 hover:text-red-800 mr-2';
+      deleteBtn.innerHTML = `<i class="bx bx-trash"></i>`;
+      deleteBtn.title = 'Delete Group';
+      deleteBtn.addEventListener('click', () => {
+        modalConfirmDeleteTitle.textContent = 'Delete Group?';
+        modalConfirmDeleteMessage.textContent = `Delete group "${groupName}" and all its extensions?`;
+        showModal(modalConfirmDelete);
+        saveConfirmDelete.onclick = () => {
+          delete extensionGroups[groupName];
+          saveExtensionGroups(() => {
+            hideModal(modalConfirmDelete);
+            buildManageGroupsUI();
+            populateExtensionDropdown();
+            populateExtensionGroupSelect();
+          });
+        };
+      });
+      actionsDiv.appendChild(deleteBtn);
+
+      // Add Extension button for this group
+      const addExtBtn = document.createElement('button');
+      addExtBtn.className = 'text-green-600 hover:text-green-800';
+      addExtBtn.innerHTML = `<i class="bx bx-plus"></i>`;
+      addExtBtn.title = 'Add Extension to this Group';
+      addExtBtn.addEventListener('click', () => {
+        modalAddExtensionValue.value = '';
+        modalAddExtensionGroupName.textContent = groupName;
+        showModal(modalAddExtension);
+        saveAddExtension.onclick = () => {
+          const newExt = modalAddExtensionValue.value.trim();
+          if (newExt && !extensionGroups[groupName].includes(newExt)) {
+            extensionGroups[groupName].push(newExt);
+            saveExtensionGroups(() => {
+              hideModal(modalAddExtension);
+              buildManageGroupsUI();
+              populateExtensionDropdown();
+              populateExtensionGroupSelect();
+            });
+          } else {
+            hideModal(modalAddExtension);
+          }
+        };
+      });
+      actionsDiv.appendChild(addExtBtn);
+
+      headerDiv.appendChild(actionsDiv);
+      groupDiv.appendChild(headerDiv);
+
+      // List extensions for this group
+      const ul = document.createElement('ul');
+      ul.className = 'ml-4 mt-2';
+      extensionGroups[groupName].forEach((ext, idx) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center';
+        li.textContent = ext;
+        const extActions = document.createElement('div');
+        // Rename Extension button
+        const renameExtBtn = document.createElement('button');
+        renameExtBtn.className = 'text-blue-600 hover:text-blue-800 mr-2';
+        renameExtBtn.innerHTML = `<i class="bx bx-edit-alt"></i>`;
+        renameExtBtn.title = 'Rename Extension';
+        renameExtBtn.addEventListener('click', () => {
+          modalRenameExtensionInput.value = ext;
+          showModal(modalRenameExtension);
+          saveRenameExtension.onclick = () => {
+            const newExt = modalRenameExtensionInput.value.trim();
+            if (newExt && newExt !== ext) {
+              extensionGroups[groupName][idx] = newExt;
+              saveExtensionGroups(() => {
+                hideModal(modalRenameExtension);
+                buildManageGroupsUI();
+                populateExtensionDropdown();
+                populateExtensionGroupSelect();
+              });
+            } else {
+              hideModal(modalRenameExtension);
+            }
+          };
+        });
+        extActions.appendChild(renameExtBtn);
+        // Delete Extension button
+        const delExtBtn = document.createElement('button');
+        delExtBtn.className = 'text-red-600 hover:text-red-800';
+        delExtBtn.innerHTML = `<i class="bx bx-trash"></i>`;
+        delExtBtn.title = 'Delete Extension';
+        delExtBtn.addEventListener('click', () => {
+          modalConfirmDeleteTitle.textContent = 'Delete Extension?';
+          modalConfirmDeleteMessage.textContent = `Delete extension "${ext}" from group "${groupName}"?`;
+          showModal(modalConfirmDelete);
+          saveConfirmDelete.onclick = () => {
+            extensionGroups[groupName].splice(idx, 1);
+            saveExtensionGroups(() => {
+              hideModal(modalConfirmDelete);
+              buildManageGroupsUI();
+              populateExtensionDropdown();
+              populateExtensionGroupSelect();
+            });
+          };
+        });
+        extActions.appendChild(delExtBtn);
+        li.appendChild(extActions);
+        ul.appendChild(li);
+      });
+      groupDiv.appendChild(ul);
+      groupsContainer.appendChild(groupDiv);
+    });
+  }
+
+  // Manage Groups: when "Manage Groups" button is clicked, load and show modal
+  manageGroupsBtn.addEventListener('click', () => {
+    loadExtensionGroups(() => {
+      buildManageGroupsUI();
+      showModal(manageGroupsModal);
+    });
   });
 
-  // Modal elements for "Add Group"
-  const addGroupModal = document.getElementById('addGroupModal');
-  const newGroupNameInput = document.getElementById('newGroupName');
-  const saveGroupBtn = document.getElementById('saveGroupBtn');
-  const cancelGroupBtn = document.getElementById('cancelGroupBtn');
-
-  // Modal elements for "Add Extension"
-  const addExtensionModal = document.getElementById('addExtensionModal');
-  const newExtensionValueInput = document.getElementById('newExtensionValue');
-  const saveExtensionBtn = document.getElementById('saveExtensionBtn');
-  const cancelExtensionBtn = document.getElementById('cancelExtensionBtn');
-
-  // Utility functions to show/hide modals
-  function showModal(modalEl) {
-    modalEl.classList.remove('hidden');
-  }
-  function hideModal(modalEl) {
-    modalEl.classList.add('hidden');
-  }
-
-  // Instead of prompt() for adding a group, show the modal
-  addGroupBtn.addEventListener('click', () => {
-    newGroupNameInput.value = '';
-    showModal(addGroupModal);
+  // Close Manage Groups Modal (using its close button)
+  document.getElementById('closeManageGroupsBtn').addEventListener('click', () => {
+    hideModal(manageGroupsModal);
   });
-  cancelGroupBtn.addEventListener('click', () => hideModal(addGroupModal));
-  saveGroupBtn.addEventListener('click', () => {
-    const groupName = newGroupNameInput.value.trim();
-    if (!groupName) {
-      alert("Group name cannot be empty.");
-      return;
-    }
-    if (!extensionGroups[groupName]) {
+
+  // "Add Group" Sub-Modal handling
+  openAddGroupModalBtn.addEventListener('click', () => {
+    modalAddGroupName.value = '';
+    showModal(modalAddGroup);
+  });
+  cancelAddGroup.addEventListener('click', () => hideModal(modalAddGroup));
+  saveAddGroup.addEventListener('click', () => {
+    const groupName = modalAddGroupName.value.trim();
+    if (groupName && !extensionGroups[groupName]) {
       extensionGroups[groupName] = [];
       saveExtensionGroups(() => {
+        hideModal(modalAddGroup);
+        buildManageGroupsUI();
         populateExtensionDropdown();
         populateExtensionGroupSelect();
-        hideModal(addGroupModal);
       });
     } else {
-      alert("Group already exists.");
+      hideModal(modalAddGroup);
     }
   });
 
-  // Instead of prompt() for adding an extension, show the modal
-  addExtensionBtn.addEventListener('click', () => {
-    newExtensionValueInput.value = '';
-    populateExtensionGroupSelect();
-    showModal(addExtensionModal);
-  });
-  cancelExtensionBtn.addEventListener('click', () => hideModal(addExtensionModal));
-  saveExtensionBtn.addEventListener('click', () => {
-    const extensionGroupSelect = document.getElementById('extensionGroupSelect');
-    const groupName = extensionGroupSelect.value;
-    const newExtension = newExtensionValueInput.value.trim();
-    if (!groupName) {
-      alert("Please select a group.");
-      return;
-    }
-    if (!newExtension) {
-      alert("Extension cannot be empty.");
-      return;
-    }
-    if (!extensionGroups[groupName].includes(newExtension)) {
-      extensionGroups[groupName].push(newExtension);
-      saveExtensionGroups(() => {
-        populateExtensionDropdown();
-        populateExtensionGroupSelect();
-        hideModal(addExtensionModal);
-      });
-    } else {
-      alert("Extension already exists in this group.");
-    }
+  // Load extension groups then populate the "Add New Rule" dropdown
+  loadExtensionGroups(() => {
+    populateExtensionDropdown();
   });
 
-  // Pre-fill the Source URL field with the active tab's URL
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs && tabs[0] && tabs[0].url) {
-      document.getElementById('sourceUrlContains').value = tabs[0].url;
-    }
-  });
-
-  // Function to filter table rows based on the search input
+  // Filter rules table based on search input
   function filterTable() {
     const filterValue = searchInput ? searchInput.value.toLowerCase() : '';
     const rows = rulesTableBody.getElementsByTagName('tr');
@@ -172,7 +319,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Function to load and render rules as table rows
+  // Initialize Sortable for reordering rules using drag handle
+  function initSortable() {
+    if (window.Sortable) {
+      if (window.sortableInstance) window.sortableInstance.destroy();
+      window.sortableInstance = Sortable.create(rulesTableBody, {
+        animation: 150,
+        handle: '.drag-handle',
+        onEnd: function () {
+          chrome.storage.sync.get({ rules: [] }, (data) => {
+            let rules = data.rules || [];
+            const newRules = [];
+            rulesTableBody.querySelectorAll('tr').forEach(row => {
+              const originalIndex = parseInt(row.getAttribute('data-index'));
+              if (!isNaN(originalIndex)) newRules.push(rules[originalIndex]);
+            });
+            newRules.forEach((r, i) => r.precedence = newRules.length - i);
+            chrome.storage.sync.set({ rules: newRules }, loadRules);
+          });
+        }
+      });
+    }
+  }
+
+  // Load and render rules (for "Add New Rule" table)
   function loadRules() {
     chrome.storage.sync.get({ rules: [] }, (data) => {
       let rules = data.rules || [];
@@ -183,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.setAttribute('data-index', index);
         tr.className = 'odd:bg-white even:bg-gray-100 border-b border-gray-200 hover:bg-gray-50';
 
-        // File Extension Cell with embedded drag handle
+        // File Extension cell with drag handle
         const tdFileExt = document.createElement('td');
         tdFileExt.className = 'px-4 py-2';
         const dragHandle = document.createElement('span');
@@ -199,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tdFileExt.appendChild(spanContent);
         tr.appendChild(tdFileExt);
 
-        // Source URL Contains Cell
+        // Source URL cell
         const tdSourceUrl = document.createElement('td');
         tdSourceUrl.className = 'px-4 py-2';
         tdSourceUrl.textContent = rule.conditions ? (rule.conditions.sourceUrlContains || '') : '';
@@ -210,13 +380,13 @@ document.addEventListener('DOMContentLoaded', () => {
         tdSourceUrl.style.width = '100px';
         tr.appendChild(tdSourceUrl);
 
-        // Folder Cell with folder icon
+        // Folder cell with folder icon
         const tdFolder = document.createElement('td');
         tdFolder.className = 'px-4 py-2';
         tdFolder.innerHTML = `<i class="bx bx-folder mr-2"></i>${rule.folder || ''}`;
         tr.appendChild(tdFolder);
 
-        // Actions Cell with Edit and Delete buttons
+        // Actions cell: Edit and Delete buttons
         const tdActions = document.createElement('td');
         tdActions.className = 'px-4 py-2 text-center space-x-2';
         const editBtn = document.createElement('button');
@@ -232,12 +402,18 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.innerHTML = `<i class="bx bx-trash"></i>`;
         deleteBtn.title = 'Delete';
         deleteBtn.addEventListener('click', () => {
-          rules.splice(index, 1);
-          rules.forEach((r, i) => (r.precedence = rules.length - i));
-          chrome.storage.sync.set({ rules }, () => {
-            loadRules();
-            filterTable();
-          });
+          modalConfirmDeleteTitle.textContent = 'Delete Rule?';
+          modalConfirmDeleteMessage.textContent = `Delete this rule?`;
+          showModal(modalConfirmDelete);
+          saveConfirmDelete.onclick = () => {
+            rules.splice(index, 1);
+            rules.forEach((r, i) => r.precedence = rules.length - i);
+            chrome.storage.sync.set({ rules }, () => {
+              hideModal(modalConfirmDelete);
+              loadRules();
+              filterTable();
+            });
+          };
         });
         tdActions.appendChild(deleteBtn);
         tr.appendChild(tdActions);
@@ -249,39 +425,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize SortableJS on the table body using the drag handle
-  function initSortable() {
-    if (window.Sortable) {
-      if (window.sortableInstance) {
-        window.sortableInstance.destroy();
-      }
-      window.sortableInstance = Sortable.create(rulesTableBody, {
-        animation: 150,
-        handle: '.drag-handle',
-        onEnd: function () {
-          chrome.storage.sync.get({ rules: [] }, (data) => {
-            let rules = data.rules || [];
-            const newRules = [];
-            rulesTableBody.querySelectorAll('tr').forEach((row) => {
-              const originalIndex = parseInt(row.getAttribute('data-index'));
-              if (!isNaN(originalIndex)) {
-                newRules.push(rules[originalIndex]);
-              }
-            });
-            newRules.forEach((r, i) => (r.precedence = newRules.length - i));
-            chrome.storage.sync.set({ rules: newRules }, loadRules);
-          });
-        }
-      });
-    } else {
-      console.warn('SortableJS not loaded.');
-    }
-  }
-
-  // Function to enter edit mode for a rule row (using a dropdown for extension/group)
+  // Inline editing for a rule (using dropdown for extension/group)
   function enterEditMode(tr, rule, index, rules) {
     tr.innerHTML = '';
-    // Editable cell for File Extension / Group using a dropdown
     const tdFileExt = document.createElement('td');
     tdFileExt.className = 'px-4 py-2';
     const selectExt = document.createElement('select');
@@ -312,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tdFileExt.appendChild(selectExt);
     tr.appendChild(tdFileExt);
 
-    // Editable cell for Source URL Contains
     const tdSourceUrl = document.createElement('td');
     tdSourceUrl.className = 'px-4 py-2';
     const inputSourceUrl = document.createElement('input');
@@ -322,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tdSourceUrl.appendChild(inputSourceUrl);
     tr.appendChild(tdSourceUrl);
 
-    // Editable cell for Folder
     const tdFolder = document.createElement('td');
     tdFolder.className = 'px-4 py-2';
     const inputFolder = document.createElement('input');
@@ -332,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tdFolder.appendChild(inputFolder);
     tr.appendChild(tdFolder);
 
-    // Actions: Save and Cancel buttons
     const tdActions = document.createElement('td');
     tdActions.className = 'px-4 py-2 text-center space-x-2';
     const saveBtn = document.createElement('button');
@@ -355,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Object.keys(conditions).length > 0) updatedRule.conditions = conditions;
       rules[index] = updatedRule;
       rules.sort((a, b) => (b.precedence || 0) - (a.precedence || 0));
-      rules.forEach((r, i) => (r.precedence = rules.length - i));
+      rules.forEach((r, i) => r.precedence = rules.length - i);
       chrome.storage.sync.set({ rules }, () => {
         loadRules();
         filterTable();
@@ -373,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tr.appendChild(tdActions);
   }
 
-  // Form submission: Add a new rule
+  // "Add New Rule" form submission
   ruleForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const extensionValue = extensionSelect.value.trim();
@@ -385,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let newRule = { folder, precedence };
       let conditions = {};
       if (extensionValue) {
-        if (extensionValue.startsWith("group:")) {
+        if (extensionValue.startsWith('group:')) {
           conditions.extensionGroup = extensionValue.substring(6);
         } else {
           conditions.fileExtension = extensionValue;
@@ -395,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Object.keys(conditions).length > 0) newRule.conditions = conditions;
       rules.push(newRule);
       rules.sort((a, b) => (b.precedence || 0) - (a.precedence || 0));
-      rules.forEach((r, i) => (r.precedence = rules.length - i));
+      rules.forEach((r, i) => r.precedence = rules.length - i);
       chrome.storage.sync.set({ rules }, () => {
         ruleForm.reset();
         populateExtensionDropdown();
@@ -405,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Listen for storage changes and reload the table in real time
+  // Listen for changes in storage (rules)
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'sync' && changes.rules) {
       loadRules();
@@ -413,15 +556,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Search input event listener for filtering table rows
-  if (searchInput) {
-    searchInput.addEventListener('input', filterTable);
-  }
-
   // Close sidebar handler
   closeSidebarButton.addEventListener('click', () => {
     window.close();
   });
 
+  // Initial load of rules
   loadRules();
 });
