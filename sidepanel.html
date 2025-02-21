@@ -1,6 +1,7 @@
 <!-- sidepanel.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,6 +21,7 @@
     }
   </style>
 </head>
+
 <body class="p-3 bg-green-100">
   <!-- Header with Close Sidebar Button -->
   <div class="flex justify-between items-center mt-5 mb-2 mx-0 p-2 bg-orange-200 rounded-full">
@@ -72,7 +74,8 @@
             <label for="extensionSelect" class="block text-sm font-medium text-gray-700">
               Extension or Group (optional)
             </label>
-            <select id="extensionSelect" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
+            <select id="extensionSelect"
+              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
               <!-- Options populated by sidepanel.js -->
             </select>
           </div>
@@ -99,7 +102,7 @@
 
   <!-- Manage Groups Modal (Single Modal for All Group/Extension Management) -->
   <div id="manageGroupsModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
-    <div class="bg-white rounded-lg p-6 w-96 max-h-full overflow-y-auto">
+    <div class="bg-white rounded-lg p-6 w-96 max-h-[500px]">
       <h2 class="text-xl font-bold mb-4">Manage Groups & Extensions</h2>
 
       <!-- "Add Group" button at the top of the modal -->
@@ -109,8 +112,8 @@
         </button>
       </div>
 
-      <!-- Container that will be populated by sidepanel.js with groups & extensions -->
-      <div id="groupsContainer"></div>
+      <!-- Groups container: only this area will scroll if content overflows -->
+      <div id="groupsContainer" class="max-h-[300px] overflow-y-auto"></div>
 
       <!-- Close button -->
       <div class="flex justify-end mt-4">
@@ -120,6 +123,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- Add Group Sub-Modal (inside Manage Groups) -->
   <div id="modalAddGroup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
@@ -159,8 +163,7 @@
   <div id="modalRenameGroup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
     <div class="bg-white rounded-lg p-6 w-80">
       <h2 class="text-xl font-bold mb-4">Rename Group</h2>
-      <input id="modalRenameGroupInput" type="text"
-        class="w-full border border-gray-300 rounded p-2 mb-4">
+      <input id="modalRenameGroupInput" type="text" class="w-full border border-gray-300 rounded p-2 mb-4">
       <div class="flex justify-end space-x-2">
         <button id="cancelRenameGroup" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
           Cancel
@@ -173,11 +176,11 @@
   </div>
 
   <!-- Rename Extension Sub-Modal -->
-  <div id="modalRenameExtension" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+  <div id="modalRenameExtension"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
     <div class="bg-white rounded-lg p-6 w-80">
       <h2 class="text-xl font-bold mb-4">Rename Extension</h2>
-      <input id="modalRenameExtensionInput" type="text"
-        class="w-full border border-gray-300 rounded p-2 mb-4">
+      <input id="modalRenameExtensionInput" type="text" class="w-full border border-gray-300 rounded p-2 mb-4">
       <div class="flex justify-end space-x-2">
         <button id="cancelRenameExtension" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded">
           Cancel
@@ -190,7 +193,8 @@
   </div>
 
   <!-- Confirm Delete Sub-Modal (used for group or extension) -->
-  <div id="modalConfirmDelete" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+  <div id="modalConfirmDelete"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
     <div class="bg-white rounded-lg p-6 w-80">
       <h2 class="text-xl font-bold mb-4" id="modalConfirmDeleteTitle">Delete?</h2>
       <p id="modalConfirmDeleteMessage" class="mb-4 text-gray-700"></p>
@@ -207,4 +211,5 @@
 
   <script src="sidepanel.js"></script>
 </body>
+
 </html>

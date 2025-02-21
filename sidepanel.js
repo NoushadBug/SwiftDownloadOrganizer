@@ -46,10 +46,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Expanded default extension groups
   const defaultExtensionGroups = {
-    "Compressed": ["zip", "7z", "tar", "rar", "gz"],
-    "Videos": ["mp4", "mkv", "avi", "mov"],
-    "Images": ["jpg", "jpeg", "png", "gif", "bmp", "webp"],
-    "Documents": ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"]
+    "Images": [
+      "jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "svg", "webp", "raw", "heic", "ico", "psd", "ai"
+    ],
+    "Videos": [
+      "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "mpeg", "mpg", "m4v", "3gp", "3g2", "m2ts"
+    ],
+    "Audio": [
+      "mp3", "wav", "aac", "ogg", "flac", "m4a", "wma", "aiff", "alac", "amr", "mka"
+    ],
+    "Documents": [
+      "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "odt", "ods", "odp", "csv", "md", "tex", "log"
+    ],
+    "Compressed": [
+      "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso", "cab", "lz", "ar", "cpio"
+    ],
+    "Executables": [
+      "exe", "msi", "bat", "sh", "apk", "app", "bin", "cmd", "deb", "rpm"
+    ],
+    "Source Code": [
+      // Web & Script Languages
+      "js", "ts", "coffee",
+      // Scripting & General-purpose Languages
+      "py", "rb", "pl", "php", "lua", "groovy", "r",
+      // Compiled Languages
+      "c", "cpp", "cs", "java", "go", "swift", "kt", "m", "mm",
+      // Markup and Data Languages
+      "html", "css", "scss", "xml", "json", "yaml", "yml",
+      // Functional / Modern Languages
+      "rs", "clj", "cljs", "elixir", "ex", "exs",
+      // Others
+      "vb", "vbnet", "f", "fortran", "erl", "hs", "scala", "dart", "sh", "ps1"
+    ],
+    "Ebooks": [
+      "epub", "mobi", "azw", "azw3", "fb2", "djvu", "ibooks"
+    ],
+    "CAD": [
+      "dwg", "dxf", "iges", "step", "stp", "catpart", "catproduct", "prt", "sldprt"
+    ],
+    "Virtualization": [
+      "vmdk", "vhd", "vhdx", "ova", "ovf"
+    ],
+    "Database": [
+      "db", "sql", "mdb", "accdb", "sqlite", "dbf"
+    ],
+    "Miscellaneous": [
+      "dat", "bak", "tmp", "cfg", "ini", "torrent", "log"
+    ]
   };
   let extensionGroups = {};
 
