@@ -44,6 +44,49 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelConfirmDelete = document.getElementById('cancelConfirmDelete');
   const saveConfirmDelete = document.getElementById('saveConfirmDelete');
 
+  function filterTable() {
+    const filterValue = searchInput.value.toLowerCase();
+    Array.from(rulesTableBody.getElementsByTagName('tr')).forEach(row => {
+      const cells = row.getElementsByTagName('td');
+      const rowMatches = Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(filterValue));
+      row.style.display = rowMatches ? '' : 'none';
+    });
+  }
+
+  searchInput.addEventListener('input', filterTable);
+
+
+  document.getElementById('openAddRuleModal').addEventListener('click', () => {
+    document.getElementById('addRuleModal').classList.remove('hidden');
+  });
+
+  document.getElementById('closeAddRuleModal').addEventListener('click', () => {
+    document.getElementById('addRuleModal').classList.add('hidden');
+  });
+
+  // Inside DOMContentLoaded event listener
+
+  // When the Add Rule Modal is opened, auto-fill the source URL with the active tab URL
+  document.getElementById('openAddRuleModal').addEventListener('click', () => {
+    document.getElementById('addRuleModal').classList.remove('hidden');
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0] && tabs[0].url) {
+        document.getElementById('sourceUrlContains').value = tabs[0].url;
+      }
+    });
+  });
+
+  // Button to manually fetch the active tab URL and insert it into the source URL field
+  document.getElementById('fetchActiveTabUrl').addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0] && tabs[0].url) {
+        document.getElementById('sourceUrlContains').value = tabs[0].url;
+      }
+    });
+  });
+
+
+
   // Expanded default extension groups
   const defaultExtensionGroups = {
     "Images": [

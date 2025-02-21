@@ -26,10 +26,20 @@
   <!-- Header with Close Sidebar Button -->
   <div class="flex justify-between items-center mt-5 mb-2 mx-0 p-2 bg-orange-200 rounded-full">
     <h1 class="text-xl font-bold text-green-600">Swift Download Organizer</h1>
-    <button id="closeSidebar" title="Close Sidebar"
-      class="flex items-center bg-red-400 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-full transition duration-300">
-      <i class="bx bx-x"></i>
-    </button>
+    <div class="flex space-x-2">
+      <button id="openAddRuleModal" title="Add Rule"
+        class="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-full transition duration-300">
+        <i class="bx bx-plus-circle"></i>
+      </button>
+      <button id="manageGroupsBtn" title="Manage Groups"
+        class="flex items-center bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-full transition duration-300">
+        <i class="bx bx-group"></i>
+      </button>
+      <button id="closeSidebar" title="Close Sidebar"
+        class="flex items-center bg-red-400 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-full transition duration-300">
+        <i class="bx bx-x"></i>
+      </button>
+    </div>
   </div>
 
   <div class="max-w-6xl mx-auto">
@@ -55,49 +65,47 @@
         </table>
       </div>
     </section>
+  </div>
 
-    <!-- Manage Groups Button -->
-    <section>
-      <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg mb-3">
-        <button id="manageGroupsBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded">
-          Manage Groups
+  <!-- Add Rule Modal -->
+  <div id="addRuleModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg w-96">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Add New Rule</h2>
+      <form id="ruleForm" class="space-y-4">
+        <div>
+          <label for="extensionSelect" class="block text-sm font-medium text-gray-700">
+            Extension or Group (optional)
+          </label>
+          <select id="extensionSelect" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
+            <!-- Options populated by sidepanel.js -->
+          </select>
+        </div>
+        <div>
+          <label for="sourceUrlContains" class="block text-sm font-medium text-gray-700 flex items-center">
+            Source URL Contains (optional)
+            <button type="button" id="fetchActiveTabUrl" title="Fetch active tab URL"
+              class="ml-2 text-blue-600 hover:text-blue-800">
+              <i class="bx bx-refresh"></i>
+            </button>
+          </label>
+          <input type="text" id="sourceUrlContains" placeholder="Will be auto-filled from active tab"
+            class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
+        </div>
+
+        <div>
+          <label for="folder" class="block text-sm font-medium text-gray-700">Folder (required)</label>
+          <input type="text" id="folder" placeholder="e.g. Downloads/PDFs" required
+            class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
+        </div>
+        <button type="submit"
+          class="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition duration-300">
+          <i class="bx bx-plus mr-2"></i> Add Rule
         </button>
+      </form>
+      <div class="flex justify-end mt-4">
+        <button id="closeAddRuleModal" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Close</button>
       </div>
-    </section>
-
-    <!-- Add New Rule Section -->
-    <section>
-      <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Add New Rule</h2>
-        <form id="ruleForm" class="space-y-4">
-          <div>
-            <label for="extensionSelect" class="block text-sm font-medium text-gray-700">
-              Extension or Group (optional)
-            </label>
-            <select id="extensionSelect"
-              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-              <!-- Options populated by sidepanel.js -->
-            </select>
-          </div>
-          <div>
-            <label for="sourceUrlContains" class="block text-sm font-medium text-gray-700">
-              Source URL Contains (optional)
-            </label>
-            <input type="text" id="sourceUrlContains" placeholder="Will be auto-filled from active tab"
-              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
-          </div>
-          <div>
-            <label for="folder" class="block text-sm font-medium text-gray-700">Folder (required)</label>
-            <input type="text" id="folder" placeholder="e.g. Downloads/PDFs" required
-              class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
-          </div>
-          <button type="submit"
-            class="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition duration-300">
-            <i class="bx bx-plus mr-2"></i> Add Rule
-          </button>
-        </form>
-      </div>
-    </section>
+    </div>
   </div>
 
   <!-- Manage Groups Modal (Single Modal for All Group/Extension Management) -->
