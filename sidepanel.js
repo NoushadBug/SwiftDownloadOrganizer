@@ -59,6 +59,100 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('modalAddExtension').classList.add('hidden');
   });
 
+  // Export Rules & Extension Groups
+  document.getElementById('exportDataBtn').addEventListener('click', () => {
+    chrome.storage.sync.get({ rules: [], extensionGroups: {} }, (data) => {
+      const exportData = {
+        rules: data.rules || [],
+        extensionGroups: data.extensionGroups || {}
+      };
+
+      if (exportData.rules.length === 0 && Object.keys(exportData.extensionGroups).length === 0) {
+        alert("No data available to export.");
+        return;
+      }
+
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "download_organizer_data.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  });
+
+  // Import Rules & Extension Groups
+  document.getElementById('importDataBtn').addEventListener('click', () => {
+    document.getElementById('importFileInput').click();
+  });
+
+  // File Input Change Event (Handles Import)
+  document.getElementById('importFileInput').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (!importedData || typeof importedData !== 'object') throw new Error("Invalid file format.");
+
+        const importedRules = Array.isArray(importedData.rules) ? importedData.rules : [];
+        const importedExtensionGroups = importedData.extensionGroups || {};
+
+        chrome.storage.sync.get({ rules: [], extensionGroups: {} }, (data) => {
+          let existingRules = data.rules || [];
+          let existingExtensionGroups = data.extensionGroups || {};
+
+          // Merge rules while avoiding duplicates
+          let newRules = [...existingRules, ...importedRules];
+          newRules = removeDuplicateRules(newRules);
+
+          // Merge extension groups
+          let newExtensionGroups = mergeExtensionGroups(existingExtensionGroups, importedExtensionGroups);
+
+          chrome.storage.sync.set({ rules: newRules, extensionGroups: newExtensionGroups }, () => {
+            alert("Data imported successfully!");
+            loadRules(); // Refresh UI
+          });
+        });
+
+      } catch (error) {
+        alert("Error importing file: " + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Function to Remove Duplicate Rules
+  function removeDuplicateRules(rules) {
+    const uniqueSet = new Set();
+    return rules.filter(rule => {
+      const ruleKey = JSON.stringify(rule);
+      if (uniqueSet.has(ruleKey)) return false;
+      uniqueSet.add(ruleKey);
+      return true;
+    });
+  }
+
+  // Function to Merge Extension Groups
+  function mergeExtensionGroups(existingGroups, importedGroups) {
+    let mergedGroups = { ...existingGroups };
+    Object.keys(importedGroups).forEach(groupName => {
+      if (!mergedGroups[groupName]) {
+        mergedGroups[groupName] = importedGroups[groupName]; // Add new group
+      } else {
+        // Merge extensions (avoid duplicates)
+        mergedGroups[groupName] = [...new Set([...mergedGroups[groupName], ...importedGroups[groupName]])];
+      }
+    });
+    return mergedGroups;
+  }
+
 
   // Populate dropdown for both add and edit modals
   function populateExtensionDropdownFor(selectElement) {
