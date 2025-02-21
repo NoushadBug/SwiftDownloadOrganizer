@@ -44,6 +44,178 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelConfirmDelete = document.getElementById('cancelConfirmDelete');
   const saveConfirmDelete = document.getElementById('saveConfirmDelete');
 
+  // Populate dropdown for both add and edit modals
+  function populateExtensionDropdownFor(selectElement) {
+    if (!selectElement) return;
+    selectElement.innerHTML = '<option value="">-- Select extension or group --</option>';
+    for (const group in extensionGroups) {
+      const groupOption = document.createElement('option');
+      groupOption.value = "group:" + group;
+      groupOption.textContent = group + " (All)";
+      selectElement.appendChild(groupOption);
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = group;
+      extensionGroups[group].forEach(ext => {
+        const option = document.createElement('option');
+        option.value = ext;
+        option.textContent = ext;
+        optgroup.appendChild(option);
+      });
+      selectElement.appendChild(optgroup);
+    }
+  }
+
+  // Open Edit Modal with rule data
+  function openEditModal(rule, index) {
+    document.getElementById('editRuleIndex').value = index;
+    const editExtensionSelect = document.getElementById('editExtensionSelect');
+    populateExtensionDropdownFor(editExtensionSelect);
+    if (rule.conditions) {
+      if (rule.conditions.extensionGroup) {
+        editExtensionSelect.value = "group:" + rule.conditions.extensionGroup;
+      } else if (rule.conditions.fileExtension) {
+        editExtensionSelect.value = rule.conditions.fileExtension;
+      }
+    } else {
+      editExtensionSelect.value = "";
+    }
+    document.getElementById('editSourceUrlContains').value = rule.conditions ? (rule.conditions.sourceUrlContains || '') : '';
+    document.getElementById('editFolder').value = rule.folder || '';
+    document.getElementById('editRuleModal').classList.remove('hidden');
+  }
+
+  // Edit Rule form submission handler
+  document.getElementById('editRuleForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('editRuleIndex').value, 10);
+    const editExtensionSelect = document.getElementById('editExtensionSelect');
+    const sourceUrlVal = document.getElementById('editSourceUrlContains').value.trim();
+    const folderVal = document.getElementById('editFolder').value.trim();
+    chrome.storage.sync.get({ rules: [] }, (data) => {
+      let rules = data.rules || [];
+      if (index >= 0 && index < rules.length) {
+        let updatedRule = { folder: folderVal, precedence: rules[index].precedence || 0 };
+        let conditions = {};
+        const extVal = editExtensionSelect.value.trim();
+        if (extVal) {
+          if (extVal.startsWith("group:")) {
+            conditions.extensionGroup = extVal.substring(6);
+          } else {
+            conditions.fileExtension = extVal;
+          }
+        }
+        if (sourceUrlVal) conditions.sourceUrlContains = sourceUrlVal;
+        if (Object.keys(conditions).length > 0) updatedRule.conditions = conditions;
+        rules[index] = updatedRule;
+        rules.sort((a, b) => (b.precedence || 0) - (a.precedence || 0));
+        rules.forEach((r, i) => r.precedence = rules.length - i);
+        chrome.storage.sync.set({ rules }, () => {
+          document.getElementById('editRuleModal').classList.add('hidden');
+          loadRules();
+          filterTable();
+        });
+      }
+    });
+  });
+
+  // Close Edit Rule Modal handler
+  document.getElementById('closeEditRuleModal').addEventListener('click', () => {
+    document.getElementById('editRuleModal').classList.add('hidden');
+  });
+
+  // Fetch active tab URL for edit modal
+  document.getElementById('editFetchActiveTabUrl').addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs && tabs[0] && tabs[0].url) {
+        document.getElementById('editSourceUrlContains').value = tabs[0].url;
+      }
+    });
+  });
+
+  // In loadRules(), update the edit button handler to open the edit modal
+  function loadRules() {
+    chrome.storage.sync.get({ rules: [] }, (data) => {
+      let rules = data.rules || [];
+      rules.sort((a, b) => (b.precedence || 0) - (a.precedence || 0));
+      rulesTableBody.innerHTML = '';
+      rules.forEach((rule, index) => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-index', index);
+        tr.className = 'odd:bg-white even:bg-gray-100 border-b border-gray-200 hover:bg-gray-50';
+
+        // File Extension cell with drag handle
+        const tdFileExt = document.createElement('td');
+        tdFileExt.className = 'px-4 py-2';
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle mr-2 cursor-move';
+        dragHandle.innerHTML = '<i class="bx bx-menu"></i>';
+        tdFileExt.appendChild(dragHandle);
+        const spanContent = document.createElement('span');
+        if (rule.conditions && rule.conditions.extensionGroup) {
+          spanContent.innerHTML = `<i class="bx bx-layer mr-2"></i> ${rule.conditions.extensionGroup} (Group)`;
+        } else {
+          spanContent.textContent = rule.conditions ? (rule.conditions.fileExtension || '') : '';
+        }
+        tdFileExt.appendChild(spanContent);
+        tr.appendChild(tdFileExt);
+
+        // Source URL cell
+        const tdSourceUrl = document.createElement('td');
+        tdSourceUrl.className = 'px-4 py-2';
+        tdSourceUrl.textContent = rule.conditions ? (rule.conditions.sourceUrlContains || '') : '';
+        tdSourceUrl.style.display = '-webkit-box';
+        tdSourceUrl.style.webkitBoxOrient = 'vertical';
+        tdSourceUrl.style.overflow = 'hidden';
+        tdSourceUrl.style.textOverflow = 'ellipsis';
+        tdSourceUrl.style.width = '100px';
+        tr.appendChild(tdSourceUrl);
+
+        // Folder cell with folder icon
+        const tdFolder = document.createElement('td');
+        tdFolder.className = 'px-4 py-2';
+        tdFolder.innerHTML = `<i class="bx bx-folder mr-2"></i>${rule.folder || ''}`;
+        tr.appendChild(tdFolder);
+
+        // Actions cell: Edit and Delete buttons
+        const tdActions = document.createElement('td');
+        tdActions.className = 'px-4 py-2 text-center space-x-1';
+        const editBtn = document.createElement('button');
+        editBtn.className = 'text-blue-600 hover:text-blue-800 transition text-lg';
+        editBtn.innerHTML = '<i class="bx bx-edit-alt"></i>';
+        editBtn.title = 'Edit';
+        editBtn.addEventListener('click', () => {
+          openEditModal(rule, index);
+        });
+        tdActions.appendChild(editBtn);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'text-red-600 hover:text-red-800 transition text-lg';
+        deleteBtn.innerHTML = '<i class="bx bx-trash"></i>';
+        deleteBtn.title = 'Delete';
+        deleteBtn.addEventListener('click', () => {
+          modalConfirmDeleteTitle.textContent = 'Delete Rule?';
+          modalConfirmDeleteMessage.textContent = 'Delete this rule?';
+          showModal(modalConfirmDelete);
+          saveConfirmDelete.onclick = () => {
+            rules.splice(index, 1);
+            rules.forEach((r, i) => r.precedence = rules.length - i);
+            chrome.storage.sync.set({ rules }, () => {
+              hideModal(modalConfirmDelete);
+              loadRules();
+              filterTable();
+            });
+          };
+        });
+        tdActions.appendChild(deleteBtn);
+        tr.appendChild(tdActions);
+
+        rulesTableBody.appendChild(tr);
+      });
+      filterTable();
+      initSortable();
+    });
+  }
+
+
   function filterTable() {
     const filterValue = searchInput.value.toLowerCase();
     Array.from(rulesTableBody.getElementsByTagName('tr')).forEach(row => {
@@ -426,89 +598,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
-  }
-
-  // Load and render rules (for "Add New Rule" table)
-  function loadRules() {
-    chrome.storage.sync.get({ rules: [] }, (data) => {
-      let rules = data.rules || [];
-      rules.sort((a, b) => (b.precedence || 0) - (a.precedence || 0));
-      rulesTableBody.innerHTML = '';
-      rules.forEach((rule, index) => {
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-index', index);
-        tr.className = 'odd:bg-white even:bg-gray-100 border-b border-gray-200 hover:bg-gray-50';
-
-        // File Extension cell with drag handle
-        const tdFileExt = document.createElement('td');
-        tdFileExt.className = 'px-4 py-2';
-        const dragHandle = document.createElement('span');
-        dragHandle.className = 'drag-handle mr-2 cursor-move';
-        dragHandle.innerHTML = `<i class="bx bx-menu"></i>`;
-        tdFileExt.appendChild(dragHandle);
-        const spanContent = document.createElement('span');
-        if (rule.conditions && rule.conditions.extensionGroup) {
-          spanContent.innerHTML = `<i class="bx bx-layer mr-2"></i> ${rule.conditions.extensionGroup} (Group)`;
-        } else {
-          spanContent.textContent = rule.conditions ? (rule.conditions.fileExtension || '') : '';
-        }
-        tdFileExt.appendChild(spanContent);
-        tr.appendChild(tdFileExt);
-
-        // Source URL cell
-        const tdSourceUrl = document.createElement('td');
-        tdSourceUrl.className = 'px-4 py-2';
-        tdSourceUrl.textContent = rule.conditions ? (rule.conditions.sourceUrlContains || '') : '';
-        tdSourceUrl.style.display = '-webkit-box';
-        tdSourceUrl.style.webkitBoxOrient = 'vertical';
-        tdSourceUrl.style.overflow = 'hidden';
-        tdSourceUrl.style.textOverflow = 'ellipsis';
-        tdSourceUrl.style.width = '100px';
-        tr.appendChild(tdSourceUrl);
-
-        // Folder cell with folder icon
-        const tdFolder = document.createElement('td');
-        tdFolder.className = 'px-4 py-2';
-        tdFolder.innerHTML = `<i class="bx bx-folder mr-2"></i>${rule.folder || ''}`;
-        tr.appendChild(tdFolder);
-
-        // Actions cell: Edit and Delete buttons
-        const tdActions = document.createElement('td');
-        tdActions.className = 'px-4 py-2 text-center space-x-2';
-        const editBtn = document.createElement('button');
-        editBtn.className = 'text-blue-600 hover:text-blue-800 transition text-lg';
-        editBtn.innerHTML = `<i class="bx bx-edit-alt"></i>`;
-        editBtn.title = 'Edit';
-        editBtn.addEventListener('click', () => {
-          enterEditMode(tr, rule, index, rules);
-        });
-        tdActions.appendChild(editBtn);
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'text-red-600 hover:text-red-800 transition text-lg';
-        deleteBtn.innerHTML = `<i class="bx bx-trash"></i>`;
-        deleteBtn.title = 'Delete';
-        deleteBtn.addEventListener('click', () => {
-          modalConfirmDeleteTitle.textContent = 'Delete Rule?';
-          modalConfirmDeleteMessage.textContent = `Delete this rule?`;
-          showModal(modalConfirmDelete);
-          saveConfirmDelete.onclick = () => {
-            rules.splice(index, 1);
-            rules.forEach((r, i) => r.precedence = rules.length - i);
-            chrome.storage.sync.set({ rules }, () => {
-              hideModal(modalConfirmDelete);
-              loadRules();
-              filterTable();
-            });
-          };
-        });
-        tdActions.appendChild(deleteBtn);
-        tr.appendChild(tdActions);
-
-        rulesTableBody.appendChild(tr);
-      });
-      filterTable();
-      initSortable();
-    });
   }
 
   // Inline editing for a rule (using dropdown for extension/group)

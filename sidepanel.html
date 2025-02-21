@@ -67,6 +67,48 @@
     </section>
   </div>
 
+  <!-- Edit Rule Modal -->
+  <div id="editRuleModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg w-96">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Edit Rule</h2>
+      <form id="editRuleForm" class="space-y-4">
+        <input type="hidden" id="editRuleIndex" />
+        <div>
+          <label for="editExtensionSelect" class="block text-sm font-medium text-gray-700">
+            Extension or Group (optional)
+          </label>
+          <select id="editExtensionSelect"
+            class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
+            <!-- Options populated dynamically -->
+          </select>
+        </div>
+        <div>
+          <label for="editSourceUrlContains" class="block text-sm font-medium text-gray-700 flex items-center">
+            Source URL Contains (optional)
+            <button type="button" id="editFetchActiveTabUrl" title="Fetch active tab URL"
+              class="ml-2 text-blue-600 hover:text-blue-800">
+              <i class="bx bx-refresh"></i>
+            </button>
+          </label>
+          <input type="text" id="editSourceUrlContains" placeholder="Will be auto-filled from active tab"
+            class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
+        </div>
+        <div>
+          <label for="editFolder" class="block text-sm font-medium text-gray-700">Folder (required)</label>
+          <input type="text" id="editFolder" placeholder="e.g. Downloads/PDFs" required
+            class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md" />
+        </div>
+        <button type="submit"
+          class="w-full flex items-center justify-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded transition duration-300">
+          <i class="bx bx-check mr-2"></i> Save Changes
+        </button>
+      </form>
+      <div class="flex justify-end mt-4">
+        <button id="closeEditRuleModal" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Rule Modal -->
   <div id="addRuleModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
     <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg w-96">
