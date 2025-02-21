@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "Swift Download Organizer",
+    "version": "1.0",
+    "description": "Automatically manage download folders based on advanced rules.",
+    "icons": {
+        "16": "images/icon.png",
+        "48": "images/icon.png",
+        "128": "images/icon.png"
+    },
+    "permissions": [
+        "downloads",
+        "storage",
+        "tabs",
+        "activeTab",
+        "sidePanel"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "side_panel": {
+        "default_path": "sidepanel.html"
+    },
+    "action": {
+        "default_title": "Swift Download Organizer :: Click to open panel"
+    },
+    "host_permissions": [
+        "<all_urls>"
+    ]
+}

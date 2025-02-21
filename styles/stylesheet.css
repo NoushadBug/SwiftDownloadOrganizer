@@ -1,0 +1,61 @@
+.toast {
+    opacity: 1 !important;
+    background-color: #030303 !important;
+}
+
+.toast-success {
+    background-color: #51A351 !important;
+}
+
+.toast-error {
+    background-color: #BD362F !important;
+}
+
+.toast-info {
+    background-color: #2F96B4 !important;
+}
+
+.toast-warning {
+    background-color: #F89406 !important;
+}
+
+.toast-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background-color: #000 !important;
+    ;
+    opacity: .4;
+    -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=40);
+    filter: alpha(opacity=40)
+}
+
+.toast-close-button {
+    box-shadow: none !important;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 1px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+[name="rulesTable_length"] {
+    border: 1px solid #debaba;
+    border-radius: 2em;
+    margin: 0.5em;
+}
